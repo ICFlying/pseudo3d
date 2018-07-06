@@ -3,17 +3,18 @@
 #define _PSEUDO3D_H
 
 #include "view.h"
+#include <stdbool.h>
 #include <stdarg.h>     //变长参数
 
 #define  _3D_PI     3.1415926535897
 
 #define  _3D_Type       0   //建坐标的方式  0: x/ y| z-
 
-#define  _3D_XYZ_ScanLen  (VIEW_X_SIZE/2)  //xyz坐标轴长度
+#define  _3D_XYZ_ScanLen  (VIEW_X_SIZE/2-20)  //xyz坐标轴长度
 
 //管理多边形图像的point-point连接关系的结构体
 typedef struct _3D_PPLink{
-    int order;               //选定端点
+    int currentOrder;               //选定端点
     int *targetOrderArray;   //要连接的目标点数组
     int targetOrderNum;      //目标数量
     int color;
@@ -41,6 +42,8 @@ typedef struct{
     int xyzArrayMemSize;
     int *xyArray;         //x1,y1;x2,y2;...
     int *color;           //col1;col2...
+    //
+    bool orginConnect;
     //
     _3D_PPLink_Type *link;
     _3D_Comment_Type *comment;
@@ -75,6 +78,10 @@ void _3D_angle_to_xyz(
 
 //以下要使用tft库
 void _3D_draw(
+    int centreX, 
+    int centreY, 
+    _3D_PointArray_Type *dpat);
+void _3D_draw3D(
     int centreX, 
     int centreY, 
     _3D_PointArray_Type *dpat);

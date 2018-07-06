@@ -10,7 +10,6 @@
 // 1:每次都从原始坐标进行XYZ依次旋转,适合一次旋转
 #define _3D_MODE_SWITCH  0
 
-#define _3D_DRAW_PO_LINE  0    //point-origin connect
 #define _3D_DRAW_PP_LINK  0    //point-point connect
 #if(_3D_DRAW_PP_LINK)
 #define _3D_DRAW_PP_LINK_LAST  0  //last point-first point connect
@@ -69,7 +68,7 @@ void _3D_ppLink_add(_3D_PointArray_Type *dpat, int color, int point, int targetN
     }
     //
     va_start(ap , targetNum);
-    dpplt->order = point;
+    dpplt->currentOrder = point;
     dpplt->targetOrderArray = (int *)calloc(targetNum + 1, sizeof(int));
     dpplt->color = color;
     for(i = 0, count = 0; i < targetNum; i++)
@@ -324,37 +323,21 @@ void _3D_draw(int centreX, int centreY, _3D_PointArray_Type *dpat)
     _3D_PPLink_Type *dpplt;
     int mP, mT;
     _3D_Comment_Type *dct;
-    //
-    if(dpat == NULL)
-        return;
 
-    //三维坐标转二维
-    for(i = 0, j = 0, k = 0; i < dpat->pointNum; i++)
+    //绘制: 原点和各个点连线
+    if(dpat->orginConnect)
     {
-        _3D_xyz_to_xy(&dpat->xyzArray[j], &dpat->xyArray[k]);
-
-        dpat->xyArray[k] = centreX - dpat->xyArray[k];
-        dpat->xyArray[k+1] = centreY - dpat->xyArray[k+1];
-        // printf("2DXY: %d / %d\r\n", dpat->xyArray[k], dpat->xyArray[k+1]);
-        view_dot(dpat->color[i], dpat->xyArray[k], dpat->xyArray[k+1], 2);
-        //
-        j += 3;
-        k += 2;
+        for(i = 0, j = 0; i < dpat->pointNum; i++)
+        {
+            view_line(dpat->color[i]/2, 
+                centreX, centreY, 
+                dpat->xyArray[j], dpat->xyArray[j+1], 
+                _3D_LINE_SIZE, 0);
+            j += 2;
+        }
     }
 
-    //原点和各个点连线
-#if(_3D_DRAW_PO_LINE)
-    for(i = 0, j = 0; i < dpat->pointNum; i++)
-    {
-        view_line(dpat->color[i], 
-            centreX, centreY, 
-            dpat->xyArray[j], dpat->xyArray[j+1], 
-            _3D_LINE_SIZE, 0);
-        j += 2;
-    }
-#endif
-
-    //点和点的连线
+    //绘制: 点和点的连线
     if(dpat->pointNum > 1)
     {
 #if(_3D_DRAW_PP_LINK)
@@ -382,7 +365,7 @@ void _3D_draw(int centreX, int centreY, _3D_PointArray_Type *dpat)
         {
             while(dpplt)
             {
-                mP = dpplt->order*2;
+                mP = dpplt->currentOrder*2;
                 for(i = 0; i < dpplt->targetOrderNum; i++)
                 {
                     mT = dpplt->targetOrderArray[i]*2;
@@ -398,18 +381,50 @@ void _3D_draw(int centreX, int centreY, _3D_PointArray_Type *dpat)
         }
     }
 
-    //注释
+    //绘制: 注释
     dct = dpat->comment;
     while(dct)
     {
-        //三维坐标转二维
+        view_string(dct->color, -1, dct->comment, dct->xy[0], dct->xy[1], 160, 0);
+        dct = dct->next;
+    }
+
+}
+
+void _3D_draw3D(int centreX, int centreY, _3D_PointArray_Type *dpat)
+{
+    int i, j, k;
+    _3D_Comment_Type *dct;
+    //
+    if(dpat == NULL)
+        return;
+
+    //基本点: 三维坐标转二维
+    for(i = 0, j = 0, k = 0; i < dpat->pointNum; i++)
+    {
+        _3D_xyz_to_xy(&dpat->xyzArray[j], &dpat->xyArray[k]);
+
+        dpat->xyArray[k] = centreX - dpat->xyArray[k];
+        dpat->xyArray[k+1] = centreY - dpat->xyArray[k+1];
+        // printf("2DXY: %d / %d\r\n", dpat->xyArray[k], dpat->xyArray[k+1]);
+        view_dot(dpat->color[i], dpat->xyArray[k], dpat->xyArray[k+1], 2);
+        //
+        j += 3;
+        k += 2;
+    }
+
+    //注释: 三维坐标转二维
+    dct = dpat->comment;
+    while(dct)
+    {
         _3D_xyz_to_xy(dct->xyz, dct->xy);
         dct->xy[0] = centreX - dct->xy[0];
         dct->xy[1] = centreY - dct->xy[1];
         //
-        view_string(dct->color, -1, dct->comment, dct->xy[0], dct->xy[1], 160, 0);
-        //
         dct = dct->next;
     }
+
+    //绘制
+    _3D_draw(centreX, centreY, dpat);
 }
 
