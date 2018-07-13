@@ -68,8 +68,20 @@ int main(void)
         return -1;
     }
     dpat2->orginConnect = true;
-    _3D_comment_add(dpat2, 0.00, 0.00, 0.00, "target", 0, 0xFFFFFF);
+    _3D_comment_add(dpat2, 0.00, 0.00, 16.00, "target", 0, 0xFFFFFF);
 
+    //辅助矩型
+    if((dpat3 = _3D_pointArray_init(3, 
+        0.00, 0.00, 0.00, 0x800000, 
+        0.00, 0.00, 0.00, 0xFFFFFF, 
+        0.00, 0.00, 0.00, 0x008000
+        )) == NULL)
+    {
+        printf("_3D_pointArray_init failed\r\n");
+        return -1;
+    }
+    _3D_ppLink_add(dpat3, 0x800000, 0, 1, 1);
+    _3D_ppLink_add(dpat3, 0x008000, 1, 1, 2);
 
     //初始转角
     // dpat2->raxyz[0] = _3D_PI/8;
@@ -90,6 +102,14 @@ int main(void)
         _3D_draw3D(VIEW_X_SIZE/2, VIEW_Y_SIZE/2, dpat0);
         _3D_draw3D(VIEW_X_SIZE/2, 30, dpat1);
         _3D_draw3D(VIEW_X_SIZE/2, VIEW_Y_SIZE/2, dpat2);
+
+        //
+        dpat3->xyzArray[0] = dpat2->xyzArray[0];
+        dpat3->xyzArray[3] = dpat2->xyzArray[0];
+        dpat3->xyzArray[4] = dpat2->xyzArray[1];
+        dpat3->xyzArray[5] = dpat2->xyzArray[2];
+        dpat3->xyzArray[7] = dpat2->xyzArray[1];
+        _3D_draw3D(VIEW_X_SIZE/2, VIEW_Y_SIZE/2, dpat3);
         
         //
         PRINT_EN();
